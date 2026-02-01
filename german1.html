@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>독일어 3격 동사 마스터</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .perspective-1000 { perspective: 1000px; }
+        .preserve-3d { transform-style: preserve-3d; }
+        .backface-hidden { backface-visibility: hidden; }
+        .rotate-y-180 { transform: rotateY(180deg); }
+        @keyframes bounce-in {
+            0% { transform: scale(0.9); opacity: 0; }
+            70% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+        .animate-bounce-in { animation: bounce-in 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+        
+        // 아이콘 컴포넌트 설정
+        const Icon = ({ name, ...props }) => {
+            const [iconContent, setIconContent] = useState('');
+            useEffect(() => {
+                if (window.lucide) {
+                    const icon = window.lucide.icons[name];
+                    if (icon) {
+                        const svg = icon.toSvg({ ...props, 'stroke-width': 2 });
+                        setIconContent(svg);
+                    }
+                }
+            }, [name]);
+            return <span dangerouslySetInnerHTML={{ __html: iconContent }} className="inline-block" />;
+        };
+
+        const VERB_DATA = [
+            { id: 1, german: "antworten", korean: "대답하다", category: "의사소통" },
+            { id: 2, german: "danken", korean: "감사하다", category: "의사소통" },
+            { id: 3, german: "helfen", korean: "돕다", category: "의사소통" },
+            { id: 4, german: "gratulieren", korean: "축하하다", category: "의사소통" },
+            { id: 5, german: "glauben", korean: "믿다", category: "의사소통" },
+            { id: 6, german: "vertrauen", korean: "신뢰하다", category: "의사소통" },
+            { id: 7, german: "absagen", korean: "거절/취소하다", category: "의사소통" },
+            { id: 8, german: "zusagen", korean: "수락하다", category: "의사소통" },
+            { id: 9, german: "drohen", korean: "협박하다", category: "의사소통" },
+            { id: 10, german: "dienen", korean: "봉사/도움되다", category: "의사소통" },
+            { id: 11, german: "widersprechen", korean: "반박하다", category: "의사소통" },
+            { id: 12, german: "zustimmen", korean: "동의하다", category: "의사소통" },
+            { id: 13, german: "verzeihen", korean: "용서하다", category: "의사소통" },
+            { id: 14, german: "zuhören", korean: "경청하다", category: "의사소통" },
+            { id: 15, german: "zusehen", korean: "지켜보다", category: "의사소통" },
+            { id: 16, german: "raten", korean: "조언하다", category: "의사소통" },
+            { id: 17, german: "abraten", korean: "(~하지 말라고) 권고하다", category: "의사소통" },
+            { id: 18, german: "befehlen", korean: "명령하다", category: "의사소통" },
+            { id: 19, german: "gehorchen", korean: "복종하다", category: "의사소통" },
+            { id: 20, german: "vergeben", korean: "용서하다", category: "의사소통" },
+            { id: 21, german: "gefallen", korean: "마음에 들다", category: "감정/취향" },
+            { id: 22, german: "missfallen", korean: "마음에 안 들다", category: "감정/취향" },
+            { id: 23, german: "schmecken", korean: "맛이 (~에게) 맞다", category: "감정/취향" },
+            { id: 24, german: "passen", korean: "어울리다/맞다", category: "감정/취향" },
+            { id: 25, german: "stehen", korean: "(옷 등이) 어울리다", category: "감정/취향" },
+            { id: 26, german: "fehlen", korean: "부족하다/그립다", category: "감정/취향" },
+            { id: 27, german: "ähneln", korean: "닮다", category: "감정/취향" },
+            { id: 28, german: "mangeln", korean: "부족하다", category: "감정/취향" },
+            { id: 29, german: "schaden", korean: "해를 끼치다", category: "감정/취향" },
+            { id: 30, german: "nützen", korean: "유용하다", category: "감정/취향" },
+            { id: 31, german: "genügen", korean: "충분하다", category: "감정/취향" },
+            { id: 32, german: "auffallen", korean: "눈에 띄다", category: "감정/취향" },
+            { id: 33, german: "vorkommen", korean: "(~하게) 느껴지다", category: "감정/취향" },
+            { id: 34, german: "leidtun", korean: "미안하다/안타깝다", category: "감정/취향" },
+            { id: 35, german: "wehtun", korean: "아프게 하다", category: "감정/취향" },
+            { id: 36, german: "gehören", korean: "~의 소유이다", category: "상태/소유" },
+            { id: 37, german: "passieren", korean: "일어나다/발생하다", category: "상태/소유" },
+            { id: 38, german: "geschehen", korean: "(사건이) 생기다", category: "상태/소유" },
+            { id: 39, german: "gelingen", korean: "성공하다", category: "상태/소유" },
+            { id: 40, german: "misslingen", korean: "실패하다", category: "상태/소유" },
+            { id: 41, german: "begegnen", korean: "(우연히) 마주치다", category: "상태/소유" },
+            { id: 42, german: "folgen", korean: "뒤따르다", category: "상태/소유" },
+            { id: 43, german: "einfallen", korean: "생각나다", category: "상태/소유" },
+            { id: 44, german: "entgegenkommen", korean: "협조/마중하다", category: "상태/소유" },
+            { id: 45, german: "erscheinen", korean: "나타나다", category: "상태/소유" },
+            { id: 46, german: "nachgehen", korean: "뒤따르다/살피다", category: "상태/소유" },
+            { id: 47, german: "beipflichten", korean: "동조하다", category: "상태/소유" },
+            { id: 48, german: "weichen", korean: "물러나다", category: "상태/소유" },
+            { id: 49, german: "ausweichen", korean: "피하다", category: "상태/소유" },
+            { id: 50, german: "beistehen", korean: "곁에서 돕다", category: "상태/소유" },
+        ]; //
+
+        function App() {
+            const [activeTab, setActiveTab] = useState('list');
+            const [searchTerm, setSearchTerm] = useState('');
+            const [currentIndex, setCurrentIndex] = useState(0);
+            const [showAnswer, setShowAnswer] = useState(false);
+            const [quizScore, setQuizScore] = useState(0);
+            const [quizIndex, setQuizIndex] = useState(0);
+            const [quizQuestions, setQuizQuestions] = useState([]);
+            const [quizCompleted, setQuizCompleted] = useState(false);
+            const [selectedOption, setSelectedOption] = useState(null);
+            const [answered, setAnswered] = useState(false);
+
+            const startQuiz = () => {
+                const shuffled = [...VERB_DATA].sort(() => Math.random() - 0.5).slice(0, 10);
+                const questions = shuffled.map(verb => {
+                    const options = [verb.korean];
+                    while (options.length < 4) {
+                        const randomVerb = VERB_DATA[Math.floor(Math.random() * VERB_DATA.length)].korean;
+                        if (!options.includes(randomVerb)) options.push(randomVerb);
+                    }
+                    return { ...verb, options: options.sort(() => Math.random() - 0.5) };
+                });
+                setQuizQuestions(questions);
+                setQuizIndex(0); setQuizScore(0); setQuizCompleted(false); setAnswered(false); setSelectedOption(null);
+                setActiveTab('quiz');
+            };
+
+            const handleQuizAnswer = (option) => {
+                if (answered) return;
+                setSelectedOption(option); setAnswered(true);
+                if (option === quizQuestions[quizIndex].korean) setQuizScore(prev => prev + 1);
+            };
+
+            const nextQuiz = () => {
+                if (quizIndex < quizQuestions.length - 1) {
+                    setQuizIndex(prev => prev + 1); setAnswered(false); setSelectedOption(null);
+                } else { setQuizCompleted(true); }
+            };
+
+            const filteredVerbs = VERB_DATA.filter(v => 
+                v.german.toLowerCase().includes(searchTerm.toLowerCase()) || v.korean.includes(searchTerm)
+            );
+
+            return (
+                <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-10">
+                    <header className="bg-indigo-600 text-white p-6 shadow-lg sticky top-0 z-10">
+                        <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                            <div>
+                                <h1 className="text-2xl font-bold flex items-center gap-2">
+                                    독일어 3격 지배 동사 50
+                                </h1>
+                            </div>
+                            <nav className="flex bg-indigo-700/50 rounded-lg p-1">
+                                {['list', 'cards', 'quiz'].map(tab => (
+                                    <button 
+                                        key={tab}
+                                        onClick={() => tab === 'quiz' ? startQuiz() : setActiveTab(tab)}
+                                        className={`px-4 py-2 rounded-md transition-all ${activeTab === tab ? 'bg-white text-indigo-600 shadow-sm' : 'hover:bg-indigo-500/30'}`}
+                                    >
+                                        {tab === 'list' ? '목록' : tab === 'cards' ? '학습 카드' : '퀴즈'}
+                                    </button>
+                                ))}
+                            </nav>
+                        </div>
+                    </header>
+
+                    <main className="max-w-4xl mx-auto p-4 md:p-8">
+                        {activeTab === 'list' && (
+                            <div className="space-y-6">
+                                <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+                                    <p className="font-semibold text-blue-800 text-sm">인칭 대명사는 반드시 3격형(mir, dir 등)으로 사용하세요!</p>
+                                </div>
+                                <input 
+                                    type="text" 
+                                    placeholder="동사 또는 뜻으로 검색..."
+                                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {filteredVerbs.map(verb => (
+                                        <div key={verb.id} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                                            <span className="text-xs font-bold text-indigo-500 uppercase">{verb.category}</span>
+                                            <h3 className="text-lg font-bold text-slate-800">{verb.german}</h3>
+                                            <p className="text-slate-600">{verb.korean}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'cards' && (
+                            <div className="flex flex-col items-center py-8 space-y-8">
+                                <span className="text-indigo-600 font-semibold">{currentIndex + 1} / {VERB_DATA.length}</span>
+                                <div 
+                                    className="w-full max-w-md h-80 perspective-1000 cursor-pointer"
+                                    onClick={() => setShowAnswer(!showAnswer)}
+                                >
+                                    <div className={`relative w-full h-full transition-all duration-500 preserve-3d shadow-xl rounded-2xl ${showAnswer ? 'rotate-y-180' : ''}`}>
+                                        <div className="absolute inset-0 bg-white rounded-2xl p-8 flex flex-col items-center justify-center backface-hidden border-2">
+                                            <h2 className="text-5xl font-extrabold text-slate-800">{VERB_DATA[currentIndex].german}</h2>
+                                            <p className="mt-8 text-slate-400 text-sm">클릭하여 뜻 확인</p>
+                                        </div>
+                                        <div className="absolute inset-0 bg-indigo-600 text-white rounded-2xl p-8 flex flex-col items-center justify-center backface-hidden rotate-y-180">
+                                            <h2 className="text-4xl font-bold">{VERB_DATA[currentIndex].korean}</h2>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex gap-6">
+                                    <button onClick={() => {setCurrentIndex(prev => Math.max(0, prev-1)); setShowAnswer(false)}} className="p-4 rounded-full bg-white border">←</button>
+                                    <button onClick={() => {setCurrentIndex(prev => Math.min(VERB_DATA.length-1, prev+1)); setShowAnswer(false)}} className="p-4 rounded-full bg-indigo-600 text-white">→</button>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'quiz' && (
+                            <div className="max-w-2xl mx-auto">
+                                {!quizCompleted ? (
+                                    <div className="bg-white rounded-2xl shadow-sm border p-8">
+                                        <h3 className="text-center text-3xl font-bold mb-10">"{quizQuestions[quizIndex]?.german}"</h3>
+                                        <div className="grid gap-3">
+                                            {quizQuestions[quizIndex]?.options.map((option, idx) => (
+                                                <button 
+                                                    key={idx} 
+                                                    onClick={() => handleQuizAnswer(option)}
+                                                    className={`w-full p-4 text-left rounded-xl border-2 ${answered ? (option === quizQuestions[quizIndex].korean ? 'border-green-500 bg-green-50' : (selectedOption === option ? 'border-red-500 bg-red-50' : '')) : 'hover:border-indigo-400'}`}
+                                                >
+                                                    {option}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        {answered && <button onClick={nextQuiz} className="w-full mt-8 py-4 bg-indigo-600 text-white rounded-xl font-bold">다음</button>}
+                                    </div>
+                                ) : (
+                                    <div className="bg-white rounded-3xl p-10 shadow-xl text-center">
+                                        <h2 className="text-3xl font-extrabold mb-4">학습 완료!</h2>
+                                        <div className="text-7xl font-black text-indigo-600 mb-10">{quizScore} / 10</div>
+                                        <button onClick={startQuiz} className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold">다시 도전</button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </main>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
